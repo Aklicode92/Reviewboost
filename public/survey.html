@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kundundersökning</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:#F7F5EF;color:#111410;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+  .wrap{max-width:480px;width:100%}
+  .logo{font-family:'Instrument Serif',serif;font-size:18px;display:flex;align-items:center;gap:8px;margin-bottom:32px;justify-content:center}
+  .logo-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75}
+  .card{background:#fff;border-radius:20px;border:1px solid rgba(0,0,0,.07);padding:32px}
+  .card-header{text-align:center;margin-bottom:28px}
+  .card-tag{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#1D9E75;font-weight:500;margin-bottom:10px}
+  .card-title{font-family:'Instrument Serif',serif;font-size:28px;line-height:1.2;margin-bottom:8px}
+  .card-sub{font-size:14px;color:#6b7068;font-weight:300}
+  .question{margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid rgba(0,0,0,.06)}
+  .question:last-of-type{border-bottom:none}
+  .q-label{font-size:15px;font-weight:500;margin-bottom:12px;line-height:1.4}
+  /* TEXTAREA */
+  textarea{width:100%;font-size:14px;padding:12px 14px;border:1px solid rgba(0,0,0,.12);border-radius:10px;font-family:'DM Sans',sans-serif;resize:vertical;min-height:90px;color:#111410;background:#F7F5EF;transition:.15s}
+  textarea:focus{outline:none;border-color:#1D9E75;background:#fff}
+  /* STARS */
+  .stars-input{display:flex;gap:8px}
+  .star-btn{font-size:32px;background:none;border:none;cursor:pointer;opacity:.25;transition:opacity .1s,transform .1s;line-height:1;color:#EF9F27}
+  .star-btn.active{opacity:1}
+  .star-btn:hover{transform:scale(1.15)}
+  /* RADIO */
+  .radio-group{display:flex;flex-direction:column;gap:8px}
+  .radio-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.1);cursor:pointer;transition:.15s;user-select:none}
+  .radio-item:hover{border-color:#1D9E75;background:#F0FBF7}
+  .radio-item.selected{border-color:#1D9E75;background:#E1F5EE}
+  .radio-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(0,0,0,.2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+  .radio-item.selected .radio-dot{border-color:#1D9E75;background:#1D9E75}
+  .radio-dot-inner{width:6px;height:6px;border-radius:50%;background:#fff}
+  .radio-label{font-size:14px}
+  /* YESNO */
+  .yesno-group{display:flex;gap:10px}
+  .yesno-btn{flex:1;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,.1);background:#fff;cursor:pointer;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;transition:.15s}
+  .yesno-btn:hover{border-color:#1D9E75}
+  .yesno-btn.selected-yes{border-color:#1D9E75;background:#E1F5EE;color:#0F6E56}
+  .yesno-btn.selected-no{border-color:#A32D2D;background:#FCEBEB;color:#A32D2D}
+  /* SUBMIT */
+  .btn{width:100%;padding:14px;border-radius:999px;font-size:16px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;background:#1D9E75;color:#fff;transition:.2s;margin-top:8px}
+  .btn:hover{background:#0F6E56}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  /* RESULT */
+  .result{text-align:center;padding:20px 0}
+  .result-icon{font-size:48px;margin-bottom:16px}
+  .result-title{font-family:'Instrument Serif',serif;font-size:28px;margin-bottom:12px}
+  .result-text{font-size:15px;color:#6b7068;font-weight:300;line-height:1.7;margin-bottom:24px}
+  .btn-google{display:inline-flex;align-items:center;gap:8px;background:#1D9E75;color:#fff;padding:14px 32px;border-radius:999px;font-size:15px;font-weight:500;text-decoration:none}
+  .thinking{text-align:center;padding:40px;color:#6b7068;font-size:14px}
+  .dot{width:5px;height:5px;border-radius:50%;background:#6b7068;display:inline-block;animation:blink 1.2s infinite;margin:0 2px}
+  .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo"><div class="logo-dot"></div>ReviewBoost</div>
+  <div class="card" id="card"><div class="thinking">Laddar<div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+</div>
+<script>
+const API = "";
+const params = new URLSearchParams(window.location.search);
+const formId = params.get("id");
+let form = null;
+let answers = {};
+
+async function loadForm() {
+  if (!formId) { showError("Ogiltig länk"); return; }
+  try {
+    const res = await fetch(`${API}/api/forms/${formId}`);
+    if (!res.ok) { showError("Formuläret hittades inte"); return; }
+    form = await res.json();
+    renderForm();
+  } catch { showError("Kunde inte ladda formuläret"); }
+}
+
+function renderForm() {
+  const questions = form.questions;
+  document.getElementById("card").innerHTML = `
+    <div class="card-header">
+      <div class="card-tag">Kundundersökning</div>
+      <div class="card-title">Hur var din upplevelse?</div>
+      <div class="card-sub">Det tar bara en minut. Din feedback betyder mycket för oss.</div>
+    </div>
+    <div id="questions-wrap">
+      ${questions.map((q, i) => renderQuestion(q, i)).join("")}
+    </div>
+    <button class="btn" id="submit-btn" onclick="submitForm()">Skicka svar</button>
+  `;
+}
+
+function renderQuestion(q, i) {
+  let field = "";
+  if (q.type === "stars") {
+    field = `<div class="stars-input" id="stars-${i}">
+      ${[1,2,3,4,5].map(n => `<button class="star-btn" onclick="setStar(${i}, ${n})">★</button>`).join("")}
+    </div>`;
+  } else if (q.type === "textarea") {
+    field = `<textarea placeholder="Skriv ditt svar här..." oninput="answers[${i}] = this.value"></textarea>`;
+  } else if (q.type === "radio" && q.options) {
+    field = `<div class="radio-group">${q.options.map(opt => `
+      <div class="radio-item" onclick="selectRadio(${i}, '${opt}', this)">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <span class="radio-label">${opt}</span>
+      </div>`).join("")}</div>`;
+  } else if (q.type === "yesno") {
+    field = `<div class="yesno-group">
+      <button class="yesno-btn" id="yes-${i}" onclick="selectYesNo(${i}, 'Ja')">👍 Ja</button>
+      <button class="yesno-btn" id="no-${i}" onclick="selectYesNo(${i}, 'Nej')">👎 Nej</button>
+    </div>`;
+  }
+  return `<div class="question"><div class="q-label">${q.question}</div>${field}</div>`;
+}
+
+function setStar(i, n) {
+  answers[i] = `${n}/5 stjärnor`;
+  document.querySelectorAll(`#stars-${i} .star-btn`).forEach((b, j) => b.classList.toggle("active", j < n));
+}
+
+function selectRadio(i, val, el) {
+  answers[i] = val;
+  el.closest(".radio-group").querySelectorAll(".radio-item").forEach(r => r.classList.remove("selected"));
+  el.classList.add("selected");
+}
+
+function selectYesNo(i, val) {
+  answers[i] = val;
+  const yes = document.getElementById(`yes-${i}`);
+  const no = document.getElementById(`no-${i}`);
+  yes.className = "yesno-btn" + (val === "Ja" ? " selected-yes" : "");
+  no.className = "yesno-btn" + (val === "Nej" ? " selected-no" : "");
+}
+
+async function submitForm() {
+  const btn = document.getElementById("submit-btn");
+  btn.disabled = true;
+  document.getElementById("card").innerHTML = `<div class="thinking">Analyserar din feedback<div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  const namedAnswers = {};
+  form.questions.forEach((q, i) => { namedAnswers[q.question] = answers[i] || "Inget svar"; });
+  try {
+    const res = await fetch(`${API}/api/responses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ form_id: formId, answers: namedAnswers })
+    });
+    const data = await res.json();
+    showResult(data.positive, data.google_link, data.reason);
+  } catch { showResult(true, form.google_link, ""); }
+}
+
+function showResult(positive, googleLink, reason) {
+  document.getElementById("card").innerHTML = positive ? `
+    <div class="result">
+      <div class="result-icon">🌟</div>
+      <div class="result-title">Tack så mycket!</div>
+      <div class="result-text">${reason ? reason + ".<br><br>" : ""}Vill du hjälpa andra att hitta oss? Det tar bara en minut att lämna ett omdöme på Google.</div>
+      <a class="btn-google" href="${googleLink}" target="_blank">Lämna Google-recension →</a>
+    </div>` : `
+    <div class="result">
+      <div class="result-icon">📬</div>
+      <div class="result-title">Tack för din feedback</div>
+      <div class="result-text">Vi beklagar att upplevelsen inte mötte dina förväntningar. Vi tar det på allvar och hör av oss inom kort.</div>
+    </div>`;
+}
+
+function showError(msg) {
+  document.getElementById("card").innerHTML = `<div class="result"><div class="result-icon">⚠️</div><div class="result-title">${msg}</div></div>`;
+}
+
+loadForm();
+</script>
+</body>
+</html>
