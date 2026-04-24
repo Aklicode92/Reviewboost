@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReviewBoost — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:#F7F5EF;color:#111410;min-height:100vh}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:#fff;border-bottom:1px solid rgba(0,0,0,.07)}
+  .logo{font-family:'Instrument Serif',serif;font-size:20px;display:flex;align-items:center;gap:8px;text-decoration:none;color:#111410}
+  .logo-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75}
+  .nav-right{display:flex;align-items:center;gap:16px}
+  .user-email{font-size:13px;color:#6b7068}
+  .btn-nav{padding:8px 18px;border-radius:999px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
+  .btn-create{background:#1D9E75;color:#fff}
+  .btn-create:hover{background:#0F6E56}
+  .btn-logout{background:transparent;border:1px solid rgba(0,0,0,.15);color:#111410}
+  .btn-logout:hover{border-color:#111410}
+  .wrap{max-width:1000px;margin:0 auto;padding:36px 24px}
+  h1{font-family:'Instrument Serif',serif;font-size:32px;margin-bottom:6px}
+  .sub{font-size:14px;color:#6b7068;margin-bottom:32px;font-weight:300}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px}
+  .metric{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.07);padding:18px 20px}
+  .metric-label{font-size:12px;color:#6b7068;margin-bottom:6px}
+  .metric-value{font-size:26px;font-weight:500}
+  .metric-value.green{color:#0F6E56}
+  .metric-value.amber{color:#854F0B}
+  .section-title{font-size:15px;font-weight:500;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+  .forms-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}
+  .form-card{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.07);padding:18px 20px}
+  .form-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+  .form-desc{font-size:14px;font-weight:500;margin-bottom:4px}
+  .form-meta{font-size:12px;color:#6b7068}
+  .form-actions{display:flex;gap:8px;flex-shrink:0}
+  .btn-sm{padding:6px 14px;border-radius:999px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
+  .btn-copy{background:#E1F5EE;color:#0F6E56}
+  .btn-copy:hover{background:#c8ede0}
+  .btn-del{background:transparent;border:1px solid rgba(163,45,45,.3);color:#A32D2D}
+  .btn-del:hover{background:#FCEBEB}
+  .responses{margin-top:12px;border-top:1px solid rgba(0,0,0,.06);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+  .response-item{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 12px;background:#F7F5EF;border-radius:8px}
+  .response-left{flex:1;min-width:0}
+  .response-q{font-size:12px;color:#6b7068;margin-bottom:2px}
+  .response-a{font-size:13px;color:#111410}
+  .badge{font-size:11px;padding:3px 10px;border-radius:999px;font-weight:500;white-space:nowrap;flex-shrink:0}
+  .badge.pos{background:#E1F5EE;color:#0F6E56}
+  .badge.neg{background:#FCEBEB;color:#A32D2D}
+  .badge.wait{background:rgba(0,0,0,.06);color:#6b7068}
+  .empty{text-align:center;padding:48px;color:#6b7068;font-size:14px;background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.07)}
+  .stars{color:#EF9F27;font-size:12px}
+  .loading{text-align:center;padding:48px;color:#6b7068}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111410;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1}
+  @media(max-width:700px){.metrics{grid-template-columns:1fr 1fr}.nav-right .user-email{display:none}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="/dashboard.html"><div class="logo-dot"></div>ReviewBoost</a>
+  <div class="nav-right">
+    <span class="user-email" id="user-email"></span>
+    <button class="btn-nav btn-create" onclick="window.location.href='/index.html'">+ Nytt formulär</button>
+    <button class="btn-nav btn-logout" onclick="logout()">Logga ut</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>Dashboard</h1>
+  <p class="sub">Översikt över dina formulär och kundsvar</p>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Formulär</div><div class="metric-value" id="m-forms">—</div></div>
+    <div class="metric"><div class="metric-label">Totalt svar</div><div class="metric-value" id="m-responses">—</div></div>
+    <div class="metric"><div class="metric-label">Vidaresk. till Google</div><div class="metric-value green" id="m-positive">—</div></div>
+    <div class="metric"><div class="metric-label">Konvertering</div><div class="metric-value amber" id="m-rate">—</div></div>
+  </div>
+
+  <div class="section-title">Mina formulär</div>
+  <div id="forms-container" class="forms-grid"><div class="loading">Laddar...</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://twbuaccltoolsnsbsyfq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3YnVhY2NsdG9vbHNuc2JzeWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwNjYyNjEsImV4cCI6MjA2MDY0MjI2MX0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3YnVhY2NsdG9vbHNuc2JzeWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwNjYyNjEsImV4cCI6MjA2MDY0MjI2MX0';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentUser = null;
+
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = '/login.html'; return; }
+  currentUser = session.user;
+  document.getElementById('user-email').textContent = currentUser.email;
+  await loadData();
+}
+
+async function loadData() {
+  const { data: forms } = await supabase
+    .from('forms')
+    .select('*, responses(*)')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false });
+
+  if (!forms || forms.length === 0) {
+    document.getElementById('forms-container').innerHTML = `
+      <div class="empty">Inga formulär ännu.<br><br>
+      <button class="btn-nav btn-create" style="padding:10px 24px;font-size:14px" onclick="window.location.href='/index.html'">Skapa ditt första formulär</button></div>`;
+    updateMetrics([], []);
+    return;
+  }
+
+  const allResponses = forms.flatMap(f => f.responses || []);
+  updateMetrics(forms, allResponses);
+  renderForms(forms);
+}
+
+function updateMetrics(forms, responses) {
+  const positive = responses.filter(r => r.is_positive).length;
+  const rate = responses.length > 0 ? Math.round(positive / responses.length * 100) + '%' : '—';
+  document.getElementById('m-forms').textContent = forms.length;
+  document.getElementById('m-responses').textContent = responses.length;
+  document.getElementById('m-positive').textContent = positive;
+  document.getElementById('m-rate').textContent = rate;
+}
+
+function renderForms(forms) {
+  document.getElementById('forms-container').innerHTML = forms.map(f => {
+    const responses = f.responses || [];
+    const positive = responses.filter(r => r.is_positive).length;
+    const responsesHtml = responses.length === 0
+      ? '<div style="font-size:13px;color:#6b7068;padding:8px 0">Inga svar ännu</div>'
+      : responses.slice(0, 3).map(r => {
+          const answers = r.answers || {};
+          const firstQ = Object.keys(answers)[0] || '';
+          const firstA = answers[firstQ] || '';
+          return `<div class="response-item">
+            <div class="response-left">
+              <div class="response-q">${firstQ}</div>
+              <div class="response-a">${firstA}</div>
+              ${r.ai_reason ? `<div style="font-size:11px;color:#6b7068;margin-top:2px">AI: ${r.ai_reason}</div>` : ''}
+            </div>
+            <span class="badge ${r.is_positive ? 'pos' : 'neg'}">${r.is_positive ? '✓ Google' : '✗ Privat'}</span>
+          </div>`;
+        }).join('') + (responses.length > 3 ? `<div style="font-size:12px;color:#6b7068;padding:4px 0">+${responses.length - 3} fler svar</div>` : '');
+
+    return `<div class="form-card">
+      <div class="form-card-header">
+        <div>
+          <div class="form-desc">${(f.business_description || 'Formulär').slice(0, 70)}...</div>
+          <div class="form-meta">${new Date(f.created_at).toLocaleDateString('sv-SE')} · ${f.questions?.length || 0} frågor · ${responses.length} svar · ${positive} till Google</div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-sm btn-copy" onclick="copyLink('${f.id}')">Kopiera länk</button>
+          <button class="btn-sm btn-del" onclick="deleteForm('${f.id}')">Ta bort</button>
+        </div>
+      </div>
+      <div class="responses">${responsesHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function copyLink(id) {
+  navigator.clipboard.writeText(window.location.origin + '/survey.html?id=' + id);
+  showToast('Länk kopierad!');
+}
+
+async function deleteForm(id) {
+  if (!confirm('Ta bort formuläret och alla svar?')) return;
+  await supabase.from('responses').delete().eq('form_id', id);
+  await supabase.from('forms').delete().eq('id', id).eq('user_id', currentUser.id);
+  loadData();
+}
+
+async function logout() {
+  await supabase.auth.signOut();
+  window.location.href = '/login.html';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+init();
+</script>
+</body>
+</html>

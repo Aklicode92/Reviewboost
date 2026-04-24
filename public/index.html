@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReviewBoost — Skapa formulär</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:#F7F5EF;color:#111410;min-height:100vh}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:#fff;border-bottom:1px solid rgba(0,0,0,.07)}
+  .logo{font-family:'Instrument Serif',serif;font-size:20px;display:flex;align-items:center;gap:8px;text-decoration:none;color:#111410}
+  .logo-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75}
+  .nav-right{display:flex;align-items:center;gap:12px}
+  .btn-nav{padding:8px 18px;border-radius:999px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
+  .btn-dash{background:transparent;border:1px solid rgba(0,0,0,.15);color:#111410}
+  .btn-dash:hover{border-color:#111410}
+  .wrap{max-width:720px;margin:0 auto;padding:40px 24px}
+  h1{font-family:'Instrument Serif',serif;font-size:36px;margin-bottom:8px}
+  .sub{color:#6b7068;font-size:15px;margin-bottom:32px;font-weight:300}
+  .card{background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,.07);padding:28px 32px;margin-bottom:20px}
+  .card h2{font-size:16px;font-weight:500;margin-bottom:18px}
+  label{font-size:13px;color:#6b7068;display:block;margin-bottom:6px}
+  textarea{width:100%;font-size:15px;padding:12px 14px;border:1px solid rgba(0,0,0,.15);border-radius:10px;font-family:'DM Sans',sans-serif;resize:vertical;min-height:90px;color:#111410;background:#F7F5EF}
+  textarea:focus{outline:none;border-color:#1D9E75}
+  input[type=url]{width:100%;font-size:15px;padding:12px 14px;border:1px solid rgba(0,0,0,.15);border-radius:10px;font-family:'DM Sans',sans-serif;color:#111410;background:#F7F5EF}
+  input[type=url]:focus{outline:none;border-color:#1D9E75}
+  .btn{padding:11px 24px;border-radius:999px;font-size:14px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:.2s}
+  .btn-green{background:#1D9E75;color:#fff}
+  .btn-green:hover{background:#0F6E56}
+  .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,.15);color:#111410}
+  .btn-ghost:hover{border-color:#111410}
+  .questions-list{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+  .question-item{background:#F7F5EF;border-radius:10px;padding:12px 14px;border:1px solid rgba(0,0,0,.06)}
+  .question-row{display:flex;align-items:center;gap:8px}
+  .question-input{flex:1;font-size:14px;border:none;background:transparent;color:#111410;font-family:'DM Sans',sans-serif;padding:0}
+  .question-input:focus{outline:none}
+  .type-badge{font-size:11px;padding:3px 8px;border-radius:6px;background:#E1F5EE;color:#0F6E56;font-weight:500;white-space:nowrap;flex-shrink:0}
+  .del-btn{background:none;border:none;cursor:pointer;color:#ccc;font-size:18px;line-height:1;padding:0 2px;flex-shrink:0}
+  .del-btn:hover{color:#A32D2D}
+  .options-row{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
+  .option-chip{font-size:11px;background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:6px;padding:2px 8px;color:#6b7068}
+  .add-q{font-size:13px;color:#1D9E75;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;padding:4px 0;margin-top:4px}
+  .link-box{background:#E1F5EE;border-radius:12px;padding:16px 20px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .link-url{font-size:13px;color:#0F6E56;word-break:break-all;font-weight:500}
+  .copy-btn{background:#1D9E75;color:#fff;border:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif}
+  .copy-btn:hover{background:#0F6E56}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111410;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="/dashboard.html"><div class="logo-dot"></div>ReviewBoost</a>
+  <div class="nav-right">
+    <button class="btn-nav btn-dash" onclick="window.location.href='/dashboard.html'">← Dashboard</button>
+  </div>
+</nav>
+<div class="wrap">
+  <h1>Skapa formulär</h1>
+  <p class="sub">Beskriv ditt företag — AI genererar 10 anpassade frågor med rätt svarstyp.</p>
+
+  <div class="card" id="step1">
+    <h2>1. Beskriv ditt företag</h2>
+    <label>Vad gör ditt företag?</label>
+    <textarea id="desc" placeholder="T.ex. Vi driver en bilverkstad i Göteborg..."></textarea>
+    <div style="margin-top:12px">
+      <button class="btn btn-green" onclick="generateForm()">
+        <span id="gen-spinner" class="spinner" style="display:none"></span>
+        Generera 10 frågor med AI
+      </button>
+    </div>
+  </div>
+
+  <div class="card" id="step2" style="display:none">
+    <h2>2. Redigera dina frågor</h2>
+    <p style="font-size:13px;color:#6b7068;margin-bottom:4px;font-weight:300">Varje fråga har en svarstyp — ⭐ stjärnor, ✏️ fritext, ☑️ välj ett, eller 👍 ja/nej.</p>
+    <div class="questions-list" id="questions-list"></div>
+    <button class="add-q" onclick="addQuestion()">+ Lägg till fråga</button>
+    <div style="margin-top:24px;border-top:1px solid rgba(0,0,0,.07);padding-top:20px">
+      <label>Din Google Reviews-länk</label>
+      <input type="url" id="google-link" placeholder="https://g.page/r/ditt-foretag/review" />
+      <p style="font-size:12px;color:#6b7068;margin-top:6px;font-weight:300">Hittar du inte din länk? <a href="/hitta-google-review-lank.html" target="_blank" style="color:#1D9E75">Se guide</a></p>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-green" onclick="saveForm()">Skapa länk</button>
+      <button class="btn btn-ghost" onclick="resetForm()">Börja om</button>
+    </div>
+  </div>
+
+  <div class="card" id="step3" style="display:none">
+    <h2>✅ Din formulärlänk är klar!</h2>
+    <p style="font-size:14px;color:#6b7068;margin-bottom:16px;font-weight:300">Skicka länken till dina kunder via mejl, SMS eller WhatsApp.</p>
+    <div class="link-box">
+      <span class="link-url" id="form-url"></span>
+      <button class="copy-btn" onclick="copyLink()">Kopiera länk</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-ghost" onclick="resetForm()">Skapa nytt formulär</button>
+      <button class="btn btn-green" onclick="window.location.href='/dashboard.html'">Gå till dashboard</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://twbuaccltoolsnsbsyfq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3YnVhY2NsdG9vbHNuc2JzeWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwNjYyNjEsImV4cCI6MjA2MDY0MjI2MX0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3YnVhY2NsdG9vbHNuc2JzeWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwNjYyNjEsImV4cCI6MjA2MDY0MjI2MX0';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const API = '';
+let currentQuestions = [];
+let currentUser = null;
+const TYPE_LABELS = {stars:'⭐ Stjärnor',textarea:'✏️ Fritext',radio:'☑️ Välj ett',yesno:'👍 Ja/Nej'};
+
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = '/login.html'; return; }
+  currentUser = session.user;
+}
+
+async function generateForm() {
+  const desc = document.getElementById('desc').value.trim();
+  if (!desc) { showToast('Beskriv ditt företag först'); return; }
+  const spinner = document.getElementById('gen-spinner');
+  spinner.style.display = 'inline-block';
+  try {
+    const res = await fetch(API+'/api/generate-form', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({description: desc})
+    });
+    const data = await res.json();
+    if (data.error) { showToast('Fel: '+data.error); spinner.style.display='none'; return; }
+    currentQuestions = data.questions || [];
+    renderQuestions();
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('step2').scrollIntoView({behavior:'smooth'});
+  } catch { showToast('Något gick fel — försök igen'); }
+  spinner.style.display = 'none';
+}
+
+function renderQuestions() {
+  document.getElementById('questions-list').innerHTML = currentQuestions.map((q,i) => {
+    const text = typeof q === 'object' ? q.question : q;
+    const type = typeof q === 'object' ? q.type : 'textarea';
+    const opts = typeof q === 'object' && q.options ? q.options : [];
+    return `<div class="question-item">
+      <div class="question-row">
+        <input class="question-input" value="${text.replace(/"/g,'&quot;')}" onchange="currentQuestions[${i}].question=this.value" />
+        <span class="type-badge">${TYPE_LABELS[type]||type}</span>
+        <button class="del-btn" onclick="removeQuestion(${i})">×</button>
+      </div>
+      ${opts.length ? `<div class="options-row">${opts.map(o=>`<span class="option-chip">${o}</span>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function addQuestion() {
+  currentQuestions.push({question:'Ny fråga',type:'textarea'});
+  renderQuestions();
+  setTimeout(() => { const inp = document.querySelectorAll('.question-input'); if(inp.length) inp[inp.length-1].focus(); }, 50);
+}
+
+function removeQuestion(i) { currentQuestions.splice(i,1); renderQuestions(); }
+
+async function saveForm() {
+  const googleLink = document.getElementById('google-link').value.trim();
+  const desc = document.getElementById('desc').value.trim();
+  if (!googleLink) { showToast('Lägg till din Google Reviews-länk'); return; }
+  if (!currentQuestions.length) { showToast('Lägg till minst en fråga'); return; }
+  try {
+    const { data, error } = await supabase.from('forms').insert([{
+      business_description: desc,
+      questions: currentQuestions,
+      google_link: googleLink,
+      user_id: currentUser.id
+    }]).select().single();
+    if (error) { showToast('Fel: '+error.message); return; }
+    const url = window.location.origin+'/survey.html?id='+data.id;
+    document.getElementById('form-url').textContent = url;
+    document.getElementById('step3').style.display = 'block';
+    document.getElementById('step3').scrollIntoView({behavior:'smooth'});
+  } catch { showToast('Något gick fel — försök igen'); }
+}
+
+function copyLink() { navigator.clipboard.writeText(document.getElementById('form-url').textContent); showToast('Länk kopierad!'); }
+
+function resetForm() {
+  document.getElementById('desc').value = '';
+  document.getElementById('google-link').value = '';
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('step3').style.display = 'none';
+  currentQuestions = [];
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+init();
+</script>
+</body>
+</html>
