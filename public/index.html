@@ -116,7 +116,7 @@ let currentUser = null;
 const TYPE_LABELS = {stars:'⭐ Stjärnor',textarea:'✏️ Fritext',radio:'☑️ Välj ett',yesno:'👍 Ja/Nej'};
 
 async function init() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = '/login.html'; return; }
   currentUser = session.user;
 }
@@ -171,7 +171,7 @@ async function saveForm() {
   if (!googleLink) { showToast('Lägg till din Google Reviews-länk'); return; }
   if (!currentQuestions.length) { showToast('Lägg till minst en fråga'); return; }
   try {
-    const { data, error } = await supabase.from('forms').insert([{
+    const { data, error } = await sb.from('forms').insert([{
       business_description: desc,
       questions: currentQuestions,
       google_link: googleLink,
