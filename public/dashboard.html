@@ -87,11 +87,11 @@
 <script>
 const SUPABASE_URL = 'https://twbuaccltoolsnsbsyfq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3YnVhY2NsdG9vbHNuc2JzeWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1ODU2NzAsImV4cCI6MjA5MjE2MTY3MH0.UY4dmvejj34YzGC7yy_O8jcg7ZEHp0y018_BqJh0XbE';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
 
 async function init() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = '/login.html'; return; }
   currentUser = session.user;
   document.getElementById('user-email').textContent = currentUser.email;
@@ -170,13 +170,13 @@ function copyLink(id) {
 
 async function deleteForm(id) {
   if (!confirm('Ta bort formuläret och alla svar?')) return;
-  await supabase.from('responses').delete().eq('form_id', id);
-  await supabase.from('forms').delete().eq('id', id).eq('user_id', currentUser.id);
+  await sb.from('responses').delete().eq('form_id', id);
+  await sb.from('forms').delete().eq('id', id).eq('user_id', currentUser.id);
   loadData();
 }
 
 async function logout() {
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   window.location.href = '/login.html';
 }
 
