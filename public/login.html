@@ -9,50 +9,74 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'DM Sans',sans-serif;background:#F7F5EF;color:#111410;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
-  .logo{font-family:'Instrument Serif',serif;font-size:22px;display:flex;align-items:center;gap:8px;margin-bottom:40px}
+  .logo{font-family:'Instrument Serif',serif;font-size:22px;display:flex;align-items:center;gap:8px;margin-bottom:40px;text-decoration:none;color:#111410}
   .logo-dot{width:9px;height:9px;border-radius:50%;background:#1D9E75}
   .card{background:#fff;border-radius:20px;border:1px solid rgba(0,0,0,.07);padding:36px;width:100%;max-width:400px}
   .card h1{font-family:'Instrument Serif',serif;font-size:28px;margin-bottom:6px}
-  .card p{font-size:14px;color:#6b7068;margin-bottom:28px;font-weight:300}
+  .card p{font-size:14px;color:#6b7068;margin-bottom:24px;font-weight:300}
   .field{margin-bottom:14px}
   .field label{font-size:13px;color:#6b7068;display:block;margin-bottom:5px}
-  .field input{width:100%;padding:11px 14px;border:1px solid rgba(0,0,0,.15);border-radius:10px;font-size:15px;font-family:'DM Sans',sans-serif;background:#F7F5EF;color:#111410}
-  .field input:focus{outline:none;border-color:#1D9E75}
-  .btn-green{width:100%;padding:12px;background:#1D9E75;color:#fff;border:none;border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px}
+  .field input{width:100%;padding:11px 14px;border:1px solid rgba(0,0,0,.15);border-radius:10px;font-size:15px;font-family:'DM Sans',sans-serif;background:#F7F5EF;color:#111410;transition:.15s}
+  .field input:focus{outline:none;border-color:#1D9E75;background:#fff}
+  .forgot{text-align:right;margin-top:-8px;margin-bottom:14px}
+  .forgot a{font-size:12px;color:#6b7068;cursor:pointer;text-decoration:none}
+  .forgot a:hover{color:#1D9E75}
+  .btn-green{width:100%;padding:12px;background:#1D9E75;color:#fff;border:none;border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px}
   .btn-green:hover{background:#0F6E56}
+  .btn-green:disabled{opacity:.6;cursor:not-allowed}
   .divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:#6b7068;font-size:13px}
   .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(0,0,0,.1)}
-  .btn-google{width:100%;padding:11px;background:#fff;color:#111410;border:1px solid rgba(0,0,0,.15);border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px}
+  .btn-google{width:100%;padding:11px;background:#fff;color:#111410;border:1px solid rgba(0,0,0,.15);border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;transition:.15s}
   .btn-google:hover{border-color:#111410}
   .toggle{text-align:center;margin-top:20px;font-size:14px;color:#6b7068}
-  .toggle a{color:#1D9E75;cursor:pointer;text-decoration:none}
+  .toggle a{color:#1D9E75;cursor:pointer;text-decoration:none;font-weight:500}
   .error{background:#FCEBEB;color:#A32D2D;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
   .success{background:#E1F5EE;color:#0F6E56;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
+  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<div class="logo"><div class="logo-dot"></div>ReviewBoost</div>
+<a class="logo" href="https://reviewboost.se"><div class="logo-dot"></div>ReviewBoost</a>
 <div class="card">
   <h1 id="card-title">Välkommen tillbaka</h1>
   <p id="card-sub">Logga in på ditt konto</p>
   <div class="error" id="error"></div>
   <div class="success" id="success"></div>
-  <div class="field">
-    <label>E-postadress</label>
-    <input type="email" id="email" placeholder="din@email.se" />
+
+  <div id="login-form">
+    <div class="field">
+      <label>E-postadress</label>
+      <input type="email" id="email" placeholder="din@email.se" />
+    </div>
+    <div class="field">
+      <label>Lösenord</label>
+      <input type="password" id="password" placeholder="••••••••" />
+    </div>
+    <div class="forgot" id="forgot-wrap">
+      <a onclick="showForgot()">Glömt lösenord?</a>
+    </div>
+    <button class="btn-green" id="submit-btn" onclick="handleSubmit()">Logga in</button>
+    <div class="divider">eller</div>
+    <button class="btn-google" onclick="signInWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+      Fortsätt med Google
+    </button>
+    <div class="toggle">
+      <span id="toggle-text">Inget konto? </span><a onclick="toggleMode()" id="toggle-link">Skapa konto</a>
+    </div>
   </div>
-  <div class="field">
-    <label>Lösenord</label>
-    <input type="password" id="password" placeholder="••••••••" />
-  </div>
-  <button class="btn-green" id="submit-btn" onclick="handleSubmit()">Logga in</button>
-  <div class="divider">eller</div>
-  <button class="btn-google" onclick="signInWithGoogle()">
-    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
-    Fortsätt med Google
-  </button>
-  <div class="toggle">
-    <span id="toggle-text">Inget konto? </span><a onclick="toggleMode()" id="toggle-link">Skapa konto</a>
+
+  <div id="forgot-form" style="display:none">
+    <p style="font-size:14px;color:#6b7068;margin-bottom:16px;font-weight:300">Skriv in din e-post så skickar vi en återställningslänk.</p>
+    <div class="field">
+      <label>E-postadress</label>
+      <input type="email" id="forgot-email" placeholder="din@email.se" />
+    </div>
+    <button class="btn-green" id="reset-btn" onclick="sendReset()">Skicka återställningslänk</button>
+    <div class="toggle" style="margin-top:16px">
+      <a onclick="hideForgot()">← Tillbaka till inloggning</a>
+    </div>
   </div>
 </div>
 
@@ -63,8 +87,13 @@
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let isSignUp = false;
 
-  sb.auth.onAuthStateChange((event, session) => {
+  sb.auth.getSession().then(({ data: { session } }) => {
     if (session) window.location.href = '/dashboard.html';
+  });
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) window.location.href = '/dashboard.html';
+    if (event === 'PASSWORD_RECOVERY') window.location.href = '/reset-password.html';
   });
 
   window.toggleMode = function() {
@@ -74,38 +103,86 @@
     document.getElementById('toggle-text').textContent = isSignUp ? 'Har du redan konto? ' : 'Inget konto? ';
     document.getElementById('toggle-link').textContent = isSignUp ? 'Logga in' : 'Skapa konto';
     document.getElementById('submit-btn').textContent = isSignUp ? 'Skapa konto' : 'Logga in';
+    document.getElementById('forgot-wrap').style.display = isSignUp ? 'none' : 'block';
+    hideMessages();
+  };
+
+  window.showForgot = function() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('forgot-form').style.display = 'block';
+    document.getElementById('card-title').textContent = 'Glömt lösenord?';
+    document.getElementById('card-sub').textContent = '';
+    hideMessages();
+  };
+
+  window.hideForgot = function() {
+    document.getElementById('login-form').style.display = 'block';
+    document.getElementById('forgot-form').style.display = 'none';
+    document.getElementById('card-title').textContent = isSignUp ? 'Skapa konto' : 'Välkommen tillbaka';
+    document.getElementById('card-sub').textContent = isSignUp ? 'Kom igång med ReviewBoost' : 'Logga in på ditt konto';
+    hideMessages();
+  };
+
+  window.sendReset = async function() {
+    const email = document.getElementById('forgot-email').value.trim();
+    if (!email) { showError('Skriv in din e-postadress'); return; }
+    const btn = document.getElementById('reset-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>';
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://app.reviewboost.se/reset-password.html'
+    });
+    btn.disabled = false;
+    btn.textContent = 'Skicka återställningslänk';
+    if (error) showError(error.message);
+    else showSuccess('Återställningslänk skickad! Kolla din e-post.');
   };
 
   function showError(msg) {
-    const el = document.getElementById('error');
-    el.textContent = msg; el.style.display = 'block';
+    document.getElementById('error').textContent = msg;
+    document.getElementById('error').style.display = 'block';
     document.getElementById('success').style.display = 'none';
   }
 
   function showSuccess(msg) {
-    const el = document.getElementById('success');
-    el.textContent = msg; el.style.display = 'block';
+    document.getElementById('success').textContent = msg;
+    document.getElementById('success').style.display = 'block';
     document.getElementById('error').style.display = 'none';
+  }
+
+  function hideMessages() {
+    document.getElementById('error').style.display = 'none';
+    document.getElementById('success').style.display = 'none';
   }
 
   window.handleSubmit = async function() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     if (!email || !password) { showError('Fyll i e-post och lösenord'); return; }
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>';
     if (isSignUp) {
       const { error } = await sb.auth.signUp({ email, password });
+      btn.disabled = false;
+      btn.textContent = 'Skapa konto';
       if (error) showError(error.message);
       else showSuccess('Konto skapat! Kolla din e-post för att verifiera.');
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) showError('Fel e-post eller lösenord');
+      btn.disabled = false;
+      btn.textContent = 'Logga in';
+      if (error) {
+        if (error.message.includes('Email not confirmed')) showError('Verifiera din e-post först — kolla inkorgen.');
+        else showError('Fel e-post eller lösenord.');
+      }
     }
   };
 
   window.signInWithGoogle = async function() {
     await sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/dashboard.html' }
+      options: { redirectTo: 'https://app.reviewboost.se/dashboard.html' }
     });
   };
 
