@@ -99,7 +99,7 @@ async function init() {
 }
 
 async function loadData() {
-  const { data: forms } = await supabase
+  const { data: forms } = await sb
     .from('forms')
     .select('*, responses(*)')
     .eq('user_id', currentUser.id)
